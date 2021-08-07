@@ -1,0 +1,17 @@
+{
+  "name": "spellchecker-cli",
+  "version": "1.0.0",
+  "description": "Simple spellchecher",
+  "main": "bin/index.js",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "clear": "^0.1.0",
+    "figlet": "^1.5.0",
+    "yargs": "^17.1.0"
+  },
+  "bin": {
+    "spellchecker-cli": "./bin/index.js"
+  },
+  "author": "Daniel Carlson <kouetchua.carl@gmail.com>",
+  "license": "MIT"
+}
