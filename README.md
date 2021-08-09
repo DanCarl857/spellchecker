@@ -30,12 +30,20 @@ Options:
 
 ## Usage
 
-Development version:
+### Development version:
 * Change directory in to the root directory: `cd spellchecker-cli`
 * Install all the dependencies: `yarn install`
 * Run the tool
 ```bash
-node index.js --file <path_to_file_to_processed>
+node index.js --file <path_to_file_to_be_processed>
+```
+
+### Installable version:
+
+* Install the package globally using: `npm install --global rudimentary-spellchecker-cli`
+* Run the tool
+```bash
+rudimentary-spellchecker-cli --file <path_to_file_to_be_processed>
 ```
 ### Dependencies
 
@@ -45,3 +53,11 @@ You should of course already have NodeJS installed, if not visit the [NodeJS Web
 * [chalk]() for styling text in the terminal
 * [figlet]() display cool text in the terminal
 * [yargs]() manage command line arguments
+
+### Upcoming
+
+* [ ] Make use of Typescript
+* [ ] Add option to provide your own dictionary
+* [ ] Add option to provide your own exceptions list
+* [ ] Add option to provide path to your output file
+* [ ] Add testing
