@@ -1,64 +1,87 @@
 #!/usr/bin/env node
 'use strict'
 
-const clear = require('clear')
-const chalk = require('chalk')
-const yargs = require('yargs')
-const figlet = require('figlet')
 const fs = require('fs')
 const readline = require('readline')
 
-// Custom imports
-const buildDictionaryMap = require('./utils/buildDictionaryMap')
-const utils = require('./utils')
+// 3rd party libraries
+const chalk = require('chalk')
+const boxen = require('boxen')
+const yargs = require('yargs')
+const figlet = require('figlet')
 
-clear()
+// Custom imports
+const utils = require('./utils')
+const { sanitize } = require('./utils')
+
 console.log(
     chalk.blue(
         figlet.textSync('Spellchecker', { horizontalLayout: 'full' })
     )
 )
+console.log(`\nDescription: A simple tool to spellcheck a provided file...\nAuthor: Daniel Carlson\nVersion: 1.0.0\nLicense: MIT\n\n`)
 
 const options = yargs
-    .usage("\n\nUsage: -f <path_to_file>")
+    .usage("\n\nUsage: -f <path_to_file> -o <path_to-output_file>")
     .option('f', { alias: 'file', describe: 'Your file to be processed', type: 'string', demandOption: true})
     .argv
 
-async const spellCheck = (filePath) => {
+const spellCheck = async (filePath) => {
+    utils.clearFile()
     const fileStream = fs.createReadStream(filePath)
     const currentLine = readline.createInterface({
         input: fileStream,
         crlfDelay: Infinity
     })
-    
-    let wrongWords = []
-    const lineCounter = ((index = 0) => () => ++index)()
-    await currentLine.on("line", (line, lineNumber = lineCounter()) => {
-       let words = line.split(' ')
-        words.map(word => {
-            if(!isWordCorrect(word)) {
-                if (utils.checkIfValidWord(word)) {
-                    wrongWords.push(utils.sanitize(word))
-                    console.log(`Wrongly Spelled word: ${utils.sanitize(word)}\nLine: ${lineNumber}, Paragraph: 1, Offset: ${words.join(' ').indexOf(word)}\n\n`)
-                }
-            }
-        })
-        // console.log(wrongWords)
-    })
-}
 
-const isWordCorrect = (word) => {
-    word = utils.sanitize(word)
-    let wordMap = buildDictionaryMap.getDictionaryMap('./resources/us_wo.csv')
-    let potentialList = wordMap.get(word.toString().slice(0, 1).toUpperCase())
-    return potentialList && potentialList.find(correctWord => word.toUpperCase() === correctWord.toUpperCase()) ? true : false
+    let checkedWrongWords = new Set()
+    let previousLine = ''
+    let paragraphCount = 0
+    const lineCounter = ((index = 0) => () => ++index)()
+    const EXCEPTIONS_LIST = utils.exceptions()
+
+    await currentLine.on("line", (line, lineNumber = lineCounter()) => {
+        let wrongWords = []
+        // Get paragraph count
+        if (/^\s*$/.test(line)) {
+           previousLine = 's' 
+        } else {
+            if (!previousLine || previousLine === 's') {
+                paragraphCount += 1
+                previousLine = 'ns'
+            }
+        }
+
+        if (line) {
+            let words = line.split(' ')
+            words.map(word => {
+                // If word was wrong before, it's always wrong so no need checking it again
+                if (checkedWrongWords.has(sanitize(word))) {
+                    utils.writeToTerminal(utils.sanitize(word), paragraphCount, lineNumber, words.join(' ').indexOf(word))
+                } else if(!utils.isWordCorrect(word)) {
+                    if (utils.checkIfValidWord(word)) {
+                        if (!EXCEPTIONS_LIST.includes(word.toUpperCase())) {
+                            wrongWords.push(utils.sanitize(word))
+                            checkedWrongWords.add(sanitize(word))
+                            utils.writeToTerminal(utils.sanitize(word), paragraphCount, lineNumber, words.join(' ').indexOf(word))
+                        }
+                    }
+                }
+            })
+        }
+        let content = ''
+        if (!line) {
+            content = '\n\n'
+        } else {
+            content = (wrongWords.length > 0) ? `[${line}]` : line
+        }
+        fs.writeFile('spellchecker_output.txt', content, { flag: 'a+' }, err => {})
+    })
 }
 
 const filePath = `${options.file}`
 if (utils.fileExists(filePath)) {
     spellCheck(filePath)
 } else {
-    console.log('+++++++++++++++++++++++++++++++++++++++++++++++++')
-    console.log('You need to provide a file for us to spell check')
-    console.log('+++++++++++++++++++++++++++++++++++++++++++++++++')
+    console.log(boxen(`You need to provide an existing file for us to spell check\nPlease check to ensure the path you provided is valid`, {padding: 1}))
 }
