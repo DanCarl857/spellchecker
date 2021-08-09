@@ -14,6 +14,10 @@ const figlet = require('figlet')
 const utils = require('./utils')
 const { sanitize } = require('./utils')
 
+// Variables
+const NO_SPACE = 'ns'
+const SPACE = 's'
+
 console.log(
     chalk.blue(
         figlet.textSync('Spellchecker', { horizontalLayout: 'full' })
@@ -27,7 +31,7 @@ const options = yargs
     .argv
 
 const spellCheck = async (filePath) => {
-    utils.clearFile()
+    utils.clearOutputFile()
     const fileStream = fs.createReadStream(filePath)
     const currentLine = readline.createInterface({
         input: fileStream,
@@ -44,11 +48,11 @@ const spellCheck = async (filePath) => {
         let wrongWords = []
         // Get paragraph count
         if (/^\s*$/.test(line)) {
-           previousLine = 's' 
+           previousLine = SPACE 
         } else {
-            if (!previousLine || previousLine === 's') {
+            if (!previousLine || previousLine === SPACE) {
                 paragraphCount += 1
-                previousLine = 'ns'
+                previousLine = NO_SPACE
             }
         }
 

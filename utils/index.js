@@ -32,7 +32,7 @@ module.exports = {
         console.log(`Wrongly Spelled word: ${chalk.red.underline.bold(word)}\nLine: ${chalk.yellow(line)}, Paragraph: ${chalk.yellow(paragraph)}, Offset: ${chalk.yellow(offset + 1)}\n\n`)
     },
 
-    clearFile: () => {
+    clearOutputFile: () => {
         fs.truncate('spellchecker_output.txt', 0, () => {})
     },
 
